@@ -34,3 +34,4 @@ server/dist/
 server/wheels/
 *.egg-info
 server/.venv
+server/quiz.db
