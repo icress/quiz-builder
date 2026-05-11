@@ -13,8 +13,8 @@ export interface OptionType {
   is_correct: boolean
 }
 
-export function Question(props: {submitted: boolean, question: QuestionType, setSelectedAnswers: Function, selectedAnswers: Answer[] }) {
-  const { question, setSelectedAnswers, selectedAnswers, submitted } = props
+export function Question(props: {submitted: boolean, showMissing: boolean, question: QuestionType, setSelectedAnswers: Function, selectedAnswers: Answer[] }) {
+  const { question, setSelectedAnswers, selectedAnswers, submitted, showMissing } = props
   const [selected, setSelected] = useState<string | null>(null)
 
   const selectAnswer = (answer: OptionType) => {
@@ -34,6 +34,7 @@ export function Question(props: {submitted: boolean, question: QuestionType, set
   }
 
   const answerForQuestion = selectedAnswers.find((a) => a.questionId === question.id)
+  const isMissing = showMissing && !answerForQuestion
 
   const feedbackClassName = (opt: OptionType) => {
     if (!submitted || !answerForQuestion) {
@@ -59,15 +60,37 @@ export function Question(props: {submitted: boolean, question: QuestionType, set
   return (
     <fieldset
       style={{
-        border: '1px solid var(--border, #ccc)',
+        border: `1px solid ${isMissing ? '#dc2626' : 'var(--border, #ccc)'}`,
         borderRadius: 8,
         padding: '1rem 1.25rem',
         marginBottom: '1.25rem',
         maxWidth: 560,
       }}
     >
-      <legend style={{ fontWeight: 600, fontSize: '1.05rem', padding: '0 0.35rem' }}>
-        {question.text}
+      <legend style={{ fontWeight: 600, fontSize: '1.05rem', padding: '0 0.35rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+        <span>{question.text}</span>
+        {isMissing ? (
+          <span
+            role="img"
+            aria-label="This question is unanswered"
+            title="This question is unanswered"
+            style={{
+              color: '#fff',
+              backgroundColor: '#dc2626',
+              borderRadius: '9999px',
+              width: '1.4rem',
+              height: '1.4rem',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 700,
+              fontSize: '0.9rem',
+              lineHeight: 1,
+            }}
+          >
+            !
+          </span>
+        ) : null}
       </legend>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', marginTop: '0.5rem' }}>
         {question.options.map((opt, index) => (
