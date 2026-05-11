@@ -8,6 +8,7 @@ interface SidebarProps {
   loading: boolean
   activeQuizId: string | null
   onSelectQuiz: (quizId: string) => void
+  onNewTest: () => void
 }
 
 export function Sidebar({
@@ -15,13 +16,22 @@ export function Sidebar({
   loading,
   activeQuizId,
   onSelectQuiz,
+  onNewTest,
 }: SidebarProps) {
   return (
     <aside
       className="w-56 shrink-0 border-r border-gray-200 flex flex-col py-4 px-3 gap-2"
-      aria-label="Previous tests"
+      aria-label="Quiz sidebar"
     >
-      <h2 className="text-sm font-semibold text-gray-700 px-1">Previous tests</h2>
+      <h2 className="text-sm font-semibold text-gray-700 px-1">Quizzes</h2>
+      <button
+        type="button"
+        className="w-full rounded-md py-2 px-2 text-sm font-medium bg-blue-500 text-white hover:bg-blue-600"
+        onClick={onNewTest}
+      >
+        New Quiz
+      </button>
+      <hr />
       {loading ? (
         <p className="text-xs text-gray-500 px-1">Loading…</p>
       ) : quizzes.length === 0 ? (

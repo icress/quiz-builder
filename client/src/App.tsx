@@ -157,6 +157,7 @@ function App() {
         loading={savedListLoading}
         activeQuizId={activeSavedQuizId}
         onSelectQuiz={loadSavedQuiz}
+        onNewTest={Reset}
       />
       <div className="flex flex-1 flex-col min-w-0 relative">
         {savedQuizLoading ? (
@@ -232,7 +233,7 @@ function App() {
               type="button"
               onClick={Reset}
             >
-              NEW TEST
+              NEW QUIZ
             </button>
           </footer>
         ) : null}
