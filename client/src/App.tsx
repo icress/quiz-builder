@@ -70,7 +70,7 @@ function App() {
         {questions.length === 0 ? (
           <div className='flex flex-col gap-2 items-center'>
             <input className='w-sm border-2 border-gray-300 rounded-md p-2' type="text" placeholder="Enter a topic" value={topic} onChange={(e) => setTopic(e.target.value)} />
-            <button className='btn bg-blue-500 w-sm rounded-md' type="button" onClick={getQuestions} disabled={loading}>
+            <button disabled={loading} className={'btn bg-blue-500 w-auto rounded-md p-4 text-white' + (loading ? ' opacity-50 cursor-not-allowed' : '')} type="button" onClick={getQuestions}>
               Get Questions
             </button>
             {loading ? (
