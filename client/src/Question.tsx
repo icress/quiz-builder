@@ -1,17 +1,60 @@
-import { useId, useState } from 'react'
+import { useState } from 'react'
+import type { Answer } from './App'
 
 export interface QuestionType {
+  id: string
   text: string
-  options: {
-    option: string
-    is_correct: boolean
-  }[]
+  options: OptionType[]
 }
 
-export function Question(props: { question: QuestionType }) {
-  const { question } = props
-  const groupName = useId()
+export interface OptionType {
+  id: string
+  option: string
+  is_correct: boolean
+}
+
+export function Question(props: {submitted: boolean, question: QuestionType, setSelectedAnswers: Function, selectedAnswers: Answer[] }) {
+  const { question, setSelectedAnswers, selectedAnswers, submitted } = props
   const [selected, setSelected] = useState<string | null>(null)
+
+  const selectAnswer = (answer: OptionType) => {
+    const selectedAnswer: Answer = {
+      questionId: question.id,
+      isCorrect: answer.is_correct,
+      optionId: answer.id
+    }
+    setSelected(answer.option)
+    const previousAnswer = selectedAnswers.find((item) => item.questionId === question.id)
+    if (previousAnswer) {
+      setSelectedAnswers(selectedAnswers.map((item) => item.questionId === selectedAnswer.questionId ? selectedAnswer : item))
+    } else {
+      setSelectedAnswers([...selectedAnswers, selectedAnswer])
+    }
+    console.log(selectedAnswers)
+  }
+
+  const answerForQuestion = selectedAnswers.find((a) => a.questionId === question.id)
+
+  const feedbackClassName = (opt: OptionType) => {
+    if (!submitted || !answerForQuestion) {
+      return undefined
+    }
+
+    const isSelected = answerForQuestion.optionId === opt.id
+    const userWasCorrect = answerForQuestion.isCorrect
+
+    if (userWasCorrect) {
+      return isSelected && opt.is_correct ? 'bg-green-400/40' : undefined
+    }
+
+    if (opt.is_correct) {
+      return 'bg-green-400/40'
+    }
+    if (isSelected) {
+      return 'bg-red-400/40'
+    }
+    return undefined
+  }
 
   return (
     <fieldset
@@ -34,15 +77,21 @@ export function Question(props: { question: QuestionType }) {
               display: 'flex',
               alignItems: 'flex-start',
               gap: '0.5rem',
-              cursor: 'pointer',
+              cursor: submitted ? 'default' : 'pointer',
+              padding: '0.45rem 0.5rem',
+              borderRadius: 6,
+              border: '1px solid transparent',
+              transition: 'background-color 0.15s ease, border-color 0.15s ease',
             }}
+            className={feedbackClassName(opt)}
           >
             <input
               type="radio"
-              name={groupName}
+              name={question.id}
               value={opt.option}
-              checked={selected === opt.option}
-              onChange={() => setSelected(opt.option)}
+              checked={answerForQuestion ? answerForQuestion.optionId === opt.id : selected === opt.option}
+              disabled={submitted}
+              onChange={() => selectAnswer(opt)}
               style={{ marginTop: '0.2rem' }}
             />
             <span>{opt.option}</span>

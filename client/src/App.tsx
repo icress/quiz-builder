@@ -3,14 +3,23 @@ import './App.css'
 import { Question } from './Question'
 import type { QuestionType } from './Question'
 
+export interface Answer {
+  questionId: string
+  isCorrect: boolean
+  optionId: string
+}
+
 function App() {
   const [topic, setTopic] = useState('')
   const [questions, setQuestions] = useState<QuestionType[]>([])
   const [loading, setLoading] = useState(false)
+  const [selectedAnswers, setSelectedAnswers] = useState<Answer[]>([])
+  const [submitted, setSubmitted] = useState<boolean>(false)
 
   const getQuestions = async () => {
     setLoading(true)
     setQuestions([])
+    setSubmitted(false)
     try {
       const response = await fetch('http://localhost:8000/get-questions', {
         method: 'POST',
@@ -21,11 +30,20 @@ function App() {
         },
       })
       const data = await response.json()
-      console.log(data)
       setQuestions(data.questions)
     } finally {
       setLoading(false)
     }
+  }
+
+  const Submit = () => {
+    if (selectedAnswers.length < 5) {
+      console.log('MISSING ANSWERS')
+    } else {
+      const score = `${selectedAnswers.filter(answer => answer.isCorrect).length} / 5`
+      console.log(score)
+    }
+    setSubmitted(true)
   }
 
   return (
@@ -42,8 +60,11 @@ function App() {
         </div>
       ) : null}
       {questions.map((question) => (
-        <Question key={question.text} question={question} />
+        <Question submitted={submitted} setSelectedAnswers={setSelectedAnswers} key={question.text} question={question} selectedAnswers={selectedAnswers} />
       ))}
+      {
+        questions.length === 5 ? <button onClick={Submit}>SUBMIT</button> : null
+      }
     </>
   )
 }
