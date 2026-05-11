@@ -47,8 +47,6 @@ function App() {
       return
     }
     setShowMissing(false)
-    const score = `${selectedAnswers.filter(answer => answer.isCorrect).length} / 5`
-    console.log(score)
     setSubmitted(true)
   }
 
@@ -60,38 +58,57 @@ function App() {
     setShowMissing(false)
   }
 
+  const correctCount =
+    submitted && questions.length === 5
+      ? selectedAnswers.filter((a) => a.isCorrect).length
+      : null
+
   return (
-    <>
-      <h1>Quiz Builder</h1>
-      {questions.length === 0 ? (
+    <div className="min-h-screen flex flex-col">
+      <div className="flex flex-1 flex-col gap-4 items-center pt-4 px-4">
+        <h1>Quiz Builder</h1>
+        {questions.length === 0 ? (
+          <div className='flex flex-col gap-2 items-center'>
+            <input className='w-sm border-2 border-gray-300 rounded-md p-2' type="text" placeholder="Enter a topic" value={topic} onChange={(e) => setTopic(e.target.value)} />
+            <button className='btn bg-blue-500 w-sm rounded-md' type="button" onClick={getQuestions} disabled={loading}>
+              Get Questions
+            </button>
+            {loading ? (
+              <div className="quiz-loading" role="status" aria-live="polite">
+                <span className="quiz-loading__spinner" aria-hidden />
+                <span className="quiz-loading__label">Loading questions…</span>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
         <div className='flex flex-col gap-2 items-center'>
-          <input className='w-sm border-2 border-gray-300 rounded-md p-2' type="text" placeholder="Enter a topic" value={topic} onChange={(e) => setTopic(e.target.value)} />
-          <button className='btn bg-blue-500 w-sm rounded-md' type="button" onClick={getQuestions} disabled={loading}>
-            Get Questions
-          </button>
-          {loading ? (
-            <div className="quiz-loading" role="status" aria-live="polite">
-              <span className="quiz-loading__spinner" aria-hidden />
-              <span className="quiz-loading__label">Loading questions…</span>
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-      <div className='flex flex-col gap-2 items-center'>
-        {questions.map((question) => (
-          <Question submitted={submitted} showMissing={showMissing} setSelectedAnswers={setSelectedAnswers} key={question.text} question={question} selectedAnswers={selectedAnswers} />
-        ))}
-        {
-          questions.length === 5 ? 
-          <button 
-            className='bg-slate-200 w-sm rounded-md center' 
-            onClick={submitted ? Reset : Submit}>
-              {submitted ? 'NEW TEST' : 'SUBMIT'}
+          {questions.map((question) => (
+            <Question submitted={submitted} showMissing={showMissing} setSelectedAnswers={setSelectedAnswers} key={question.text} question={question} selectedAnswers={selectedAnswers} />
+          ))}
+          {
+            questions.length === 5 && !submitted ? 
+            <button 
+              className='bg-slate-200 w-sm rounded-md center' 
+              onClick={Submit}>
+                {'SUBMIT'}
             </button> 
-          : null
-        }
+            : null
+          }
+        </div>
       </div>
-    </>
+      {correctCount !== null ? (
+        <footer
+          className="mt-auto w-full border-t border-gray-200 py-4 text-center text-lg font-medium flex flex-col gap-2 items-center justify-center"
+          role="status"
+          aria-live="polite"
+        >
+          Score: {correctCount} / 5
+          <button className='bg-slate-200 w-sm rounded-md center' onClick={Reset}>
+            {'NEW TEST'}
+          </button>
+        </footer>
+      ) : null}
+    </div>
   )
 }
 

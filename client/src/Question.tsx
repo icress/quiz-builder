@@ -70,26 +70,20 @@ export function Question(props: {submitted: boolean, showMissing: boolean, quest
       <legend style={{ fontWeight: 600, fontSize: '1.05rem', padding: '0 0.35rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
         <span>{question.text}</span>
         {isMissing ? (
-          <span
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            width={24}
+            height={24}
             role="img"
             aria-label="This question is unanswered"
-            title="This question is unanswered"
-            style={{
-              color: '#fff',
-              backgroundColor: '#dc2626',
-              borderRadius: '9999px',
-              width: '1.4rem',
-              height: '1.4rem',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: 700,
-              fontSize: '0.9rem',
-              lineHeight: 1,
-            }}
+            style={{ color: '#dc2626', flexShrink: 0 }}
           >
-            !
-          </span>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+          </svg>
         ) : null}
       </legend>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', marginTop: '0.5rem' }}>
