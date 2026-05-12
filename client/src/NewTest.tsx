@@ -7,9 +7,10 @@ export function NewTest(props: {
   setShowMissing: Function
   setActiveSavedQuizId: Function
   setQuizPersisted: Function
+  setTopic: Function
+  topic: string
 }) {
-  const { setQuestions, setSubmitted, setShowMissing, setActiveSavedQuizId, setQuizPersisted } = props
-  const [topic, setTopic] = useState('')
+  const { setQuestions, setSubmitted, setShowMissing, setActiveSavedQuizId, setQuizPersisted, setTopic, topic } = props
   const [loading, setLoading] = useState(false)
 
   const getQuestions = async () => {

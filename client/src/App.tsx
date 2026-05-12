@@ -169,6 +169,8 @@ function App() {
               setShowMissing={setShowMissing} 
               setActiveSavedQuizId={setActiveSavedQuizId}
               setQuizPersisted={setQuizPersisted}
+              setTopic={setTopic}
+              topic={topic}
             />
           </div>
         ) : (

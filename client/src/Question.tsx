@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { Answer } from './App'
-import { API_BASE } from './api'
+import { Explanation } from './Explanation'
 
 export interface QuestionType {
   id: string
@@ -34,7 +34,6 @@ export function Question(props: {
     onExplanation,
   } = props
   const [selected, setSelected] = useState<string | null>(null)
-  const [explainLoading, setExplainLoading] = useState(false)
 
   const selectAnswer = (answer: OptionType) => {
     const selectedAnswer: Answer = {
@@ -48,34 +47,6 @@ export function Question(props: {
       setSelectedAnswers(selectedAnswers.map((item) => item.questionId === selectedAnswer.questionId ? selectedAnswer : item))
     } else {
       setSelectedAnswers([...selectedAnswers, selectedAnswer])
-    }
-  }
-
-  const requestExplanation = async () => {
-    setExplainLoading(true)
-    try {
-      const response = await fetch(`${API_BASE}/questions/${question.id}/explain`, {
-        method: 'POST',
-        headers: { Accept: 'text/plain' },
-      })
-      if (!response.ok || !response.body) {
-        return
-      }
-      const reader = response.body.getReader()
-      const decoder = new TextDecoder()
-      let done = false
-
-      while (!done) {
-        const { value, done: streamDone } = await reader.read()
-        done = streamDone
-        const chunk = decoder.decode(value || new Uint8Array(), { stream: !done })
-
-        if (chunk) {
-          onExplanation(question.id, chunk)
-        }
-      }
-    } finally {
-      setExplainLoading(false)
     }
   }
 
@@ -102,9 +73,6 @@ export function Question(props: {
     }
     return undefined
   }
-
-  const showExplain =
-    submitted && quizPersisted && !question.explanation?.trim()
 
   return (
     <div style={{ marginBottom: '1.25rem', maxWidth: 560 }}>
@@ -164,40 +132,14 @@ export function Question(props: {
           </label>
         ))}
       </div>
+    <Explanation
+      questionId={question.id}
+      explanation={question.explanation}
+      submitted={submitted}
+      quizPersisted={quizPersisted}
+      onExplanation={onExplanation}
+    />
     </fieldset>
-    {question.explanation?.trim() ? (
-      <p
-        style={{
-          marginTop: '0.75rem',
-          padding: '0.65rem 0.85rem',
-          fontSize: '0.95rem',
-          lineHeight: 1.5,
-          background: 'var(--explanation-bg, #f8fafc)',
-          borderRadius: 8,
-          border: '1px solid var(--border, #e2e8f0)',
-        }}
-      >
-        {question.explanation}
-      </p>
-    ) : null}
-    {showExplain ? (
-      <button
-        type="button"
-        disabled={explainLoading}
-        onClick={() => void requestExplanation()}
-        style={{
-          marginTop: '0.65rem',
-          padding: '0.4rem 0.85rem',
-          fontSize: '0.9rem',
-          borderRadius: 6,
-          border: '1px solid var(--border, #ccc)',
-          background: explainLoading ? '#e2e8f0' : '#fff',
-          cursor: explainLoading ? 'not-allowed' : 'pointer',
-        }}
-      >
-        {explainLoading ? '…' : 'Explain'}
-      </button>
-    ) : null}
     </div>
   )
 }
