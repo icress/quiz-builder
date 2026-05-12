@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from get_questions import answer
 from pydantic import BaseModel
 from sqlalchemy import desc, inspect as sa_inspect, select, text
@@ -14,7 +15,6 @@ from database import engine, get_db
 from explain_answer import generate_explanation
 from models import Base, Option, Question, Quiz
 from schemas import (
-    ExplainQuestionResponse,
     QuizDetailResponse,
     QuizListItem,
     QuizOptionOut,
@@ -137,14 +137,19 @@ def create_quiz(request: SaveQuizRequest, db: Session = Depends(get_db)):
     return SaveQuizResponse(quiz_id=quiz_id)
 
 
-@app.post("/questions/{question_id}/explain", response_model=ExplainQuestionResponse)
-def explain_question(question_id: str, db: Session = Depends(get_db)):
+@app.post("/questions/{question_id}/explain")
+async def explain_question(question_id: str, db: Session = Depends(get_db)):
     question = db.get(Question, question_id)
     if question is None:
         raise HTTPException(status_code=404, detail="Question not found")
 
     if question.explanation and question.explanation.strip():
-        return ExplainQuestionResponse(explanation=question.explanation.strip())
+        cached = question.explanation.strip()
+
+        async def cached_stream():
+            yield cached
+
+        return StreamingResponse(cached_stream(), media_type="text/plain")
 
     options = db.scalars(
         select(Option).where(Option.question_id == question_id).order_by(text("rowid"))
@@ -166,18 +171,19 @@ def explain_question(question_id: str, db: Session = Depends(get_db)):
         )
     correct = correct_opts[0]
 
-    explanation_body = generate_explanation(
-        question_text=question.content,
-        selected_text=selected.content,
-        correct_text=correct.content,
-        selected_is_correct=selected.is_correct,
-    )
-    if not explanation_body:
-        raise HTTPException(
-            status_code=502,
-            detail="Model returned an empty explanation",
-        )
+    async def stream_and_persist():
+        pieces: list[str] = []
+        async for piece in generate_explanation(
+            question_text=question.content,
+            selected_text=selected.content,
+            correct_text=correct.content,
+            selected_is_correct=selected.is_correct,
+        ):
+            pieces.append(piece)
+            yield piece
+        body = "".join(pieces).strip()
+        if body:
+            question.explanation = body
+            db.commit()
 
-    question.explanation = explanation_body
-    db.commit()
-    return ExplainQuestionResponse(explanation=explanation_body)
+    return StreamingResponse(stream_and_persist(), media_type="text/plain")

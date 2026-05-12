@@ -4,8 +4,6 @@ import json
 
 MODEL = 'gemma4:e4b'
 
-RETRIEVAL_K = 3
-
 SYSTEM_PROMPT = """
 You are a quiz builder that generates questions for a specific topic that will be provided by the user.
 You will generate 5 questions for this topic.

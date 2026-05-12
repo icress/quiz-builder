@@ -54,9 +54,13 @@ function App() {
     void refreshSavedQuizzes()
   }, [refreshSavedQuizzes])
 
-  const onExplanation = useCallback((questionId: string, explanation: string) => {
+  const onExplanation = useCallback((questionId: string, chunk: string) => {
     setQuestions((prev) =>
-      prev.map((q) => (q.id === questionId ? { ...q, explanation } : q)),
+      prev.map((q) =>
+        q.id === questionId
+          ? { ...q, explanation: (q.explanation ?? '') + chunk }
+          : q,
+      ),
     )
   }, [])
 

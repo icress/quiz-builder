@@ -56,13 +56,24 @@ export function Question(props: {
     try {
       const response = await fetch(`${API_BASE}/questions/${question.id}/explain`, {
         method: 'POST',
-        headers: { Accept: 'application/json' },
+        headers: { Accept: 'text/plain' },
       })
-      if (!response.ok) {
+      if (!response.ok || !response.body) {
         return
       }
-      const data: { explanation: string } = await response.json()
-      onExplanation(question.id, data.explanation)
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let done = false
+
+      while (!done) {
+        const { value, done: streamDone } = await reader.read()
+        done = streamDone
+        const chunk = decoder.decode(value || new Uint8Array(), { stream: !done })
+
+        if (chunk) {
+          onExplanation(question.id, chunk)
+        }
+      }
     } finally {
       setExplainLoading(false)
     }
