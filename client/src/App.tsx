@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import './App.css'
-import { Question } from './Question'
 import type { QuestionType } from './Question'
 import { Sidebar, type QuizSummary } from './Sidebar'
+import { NewTest } from './NewTest'
+import { Test } from './Test'
 
-const API_BASE = 'http://localhost:8000'
+export const API_BASE = 'http://localhost:8000'
 
 export interface Answer {
   questionId: string
@@ -22,7 +23,6 @@ interface QuizDetail {
 function App() {
   const [topic, setTopic] = useState('')
   const [questions, setQuestions] = useState<QuestionType[]>([])
-  const [loading, setLoading] = useState(false)
   const [selectedAnswers, setSelectedAnswers] = useState<Answer[]>([])
   const [submitted, setSubmitted] = useState<boolean>(false)
   const [showMissing, setShowMissing] = useState<boolean>(false)
@@ -70,28 +70,6 @@ function App() {
       setSubmitted(true)
     } finally {
       setSavedQuizLoading(false)
-    }
-  }
-
-  const getQuestions = async () => {
-    setLoading(true)
-    setQuestions([])
-    setSubmitted(false)
-    setShowMissing(false)
-    setActiveSavedQuizId(null)
-    try {
-      const response = await fetch(`${API_BASE}/get-questions`, {
-        method: 'POST',
-        body: JSON.stringify({ topic }),
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-      })
-      const data = await response.json()
-      setQuestions(data.questions)
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -144,12 +122,6 @@ function App() {
     setActiveSavedQuizId(null)
   }
 
-  const total = questions.length
-  const correctCount =
-    submitted && total > 0
-      ? selectedAnswers.filter((a) => a.isCorrect).length
-      : null
-
   return (
     <div className="min-h-screen flex">
       <Sidebar
@@ -169,74 +141,27 @@ function App() {
             <span className="text-sm text-gray-600">Loading quiz…</span>
           </div>
         ) : null}
-        <div className="flex flex-1 flex-col gap-4 items-center pt-4 px-4">
-          <h1>Quiz Builder</h1>
-          {questions.length === 0 ? (
-            <div className="flex flex-col gap-2 items-center">
-              <input
-                className="w-sm border-2 border-gray-300 rounded-md p-2"
-                type="text"
-                placeholder="Enter a topic"
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-              />
-              <button
-                disabled={loading}
-                className={
-                  'btn bg-blue-500 w-auto rounded-md p-4 text-white' +
-                  (loading ? ' opacity-50 cursor-not-allowed' : '')
-                }
-                type="button"
-                onClick={getQuestions}
-              >
-                Get Questions
-              </button>
-              {loading ? (
-                <div className="quiz-loading" role="status" aria-live="polite">
-                  <span className="quiz-loading__spinner" aria-hidden />
-                  <span className="quiz-loading__label">Loading questions…</span>
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-          <div className="flex flex-col gap-2 items-center w-full max-w-xl">
-            {questions.map((question) => (
-              <Question
-                submitted={submitted}
-                showMissing={showMissing}
-                setSelectedAnswers={setSelectedAnswers}
-                key={question.id}
-                question={question}
-                selectedAnswers={selectedAnswers}
-              />
-            ))}
-            {questions.length === 5 && !submitted ? (
-              <button
-                className="bg-slate-200 w-sm rounded-md center"
-                type="button"
-                onClick={Submit}
-              >
-                SUBMIT
-              </button>
-            ) : null}
+        {questions.length === 0 ? (
+          <div className="flex flex-1 flex-col gap-4 items-center pt-4 px-4">
+            <h1>Quiz Builder</h1>
+            <NewTest 
+              setQuestions={setQuestions} 
+              setSubmitted={setSubmitted} 
+              setShowMissing={setShowMissing} 
+              setActiveSavedQuizId={setActiveSavedQuizId} 
+            />
           </div>
-        </div>
-        {correctCount !== null ? (
-          <footer
-            className="mt-auto w-full border-t border-gray-200 py-4 text-center text-lg font-medium flex flex-col gap-2 items-center justify-center"
-            role="status"
-            aria-live="polite"
-          >
-            Score: {correctCount} / {total}
-            <button
-              className="bg-slate-200 w-sm rounded-md center"
-              type="button"
-              onClick={Reset}
-            >
-              NEW QUIZ
-            </button>
-          </footer>
-        ) : null}
+        ) : (
+          <Test
+            questions={questions}
+            submitted={submitted}
+            showMissing={showMissing}
+            selectedAnswers={selectedAnswers}
+            setSelectedAnswers={setSelectedAnswers}
+            onSubmit={Submit}
+            onReset={Reset}
+          />
+        )}
       </div>
     </div>
   )
