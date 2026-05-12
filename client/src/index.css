@@ -111,3 +111,83 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+.explanation-markdown {
+  text-align: left;
+}
+
+.explanation-markdown > :first-child {
+  margin-top: 0;
+}
+
+.explanation-markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.explanation-markdown p {
+  margin: 0 0 0.65em;
+}
+
+.explanation-markdown h1,
+.explanation-markdown h2,
+.explanation-markdown h3 {
+  font-family: var(--heading);
+  font-weight: 500;
+  color: var(--text-h);
+  margin: 0.85em 0 0.4em;
+}
+
+.explanation-markdown h1 {
+  font-size: 1.15rem;
+}
+
+.explanation-markdown h2 {
+  font-size: 1.05rem;
+}
+
+.explanation-markdown h3 {
+  font-size: 1rem;
+}
+
+.explanation-markdown ul,
+.explanation-markdown ol {
+  margin: 0.5em 0;
+  padding-left: 1.35em;
+}
+
+.explanation-markdown li {
+  margin: 0.25em 0;
+}
+
+.explanation-markdown blockquote {
+  margin: 0.65em 0;
+  padding-left: 0.85rem;
+  border-left: 3px solid var(--border);
+  color: var(--text);
+}
+
+.explanation-markdown pre {
+  margin: 0.65em 0;
+  padding: 0.65rem 0.85rem;
+  border-radius: 6px;
+  background: var(--code-bg);
+  overflow-x: auto;
+}
+
+.explanation-markdown pre code {
+  display: block;
+  padding: 0;
+  background: transparent;
+  font-size: 0.9em;
+  white-space: pre-wrap;
+}
+
+.explanation-markdown hr {
+  margin: 0.85em 0;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+.explanation-markdown a {
+  color: var(--accent);
+}

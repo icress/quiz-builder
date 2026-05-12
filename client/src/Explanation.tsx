@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import ReactMarkdown from 'react-markdown'
 import { API_BASE } from './api'
 
 export function Explanation(props: {
@@ -45,7 +46,8 @@ export function Explanation(props: {
   return (
     <>
       {explanation?.trim() ? (
-        <p
+        <div
+          className='explanation-markdown'
           style={{
             marginTop: '0.75rem',
             padding: '0.65rem 0.85rem',
@@ -55,8 +57,8 @@ export function Explanation(props: {
             border: '1px solid var(--border, #e2e8f0)',
           }}
         >
-          {explanation}
-        </p>
+          <ReactMarkdown>{explanation}</ReactMarkdown>
+        </div>
       ) : null}
       {showExplain ? (
         <button
