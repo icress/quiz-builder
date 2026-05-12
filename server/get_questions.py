@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-MODEL = 'claude-haiku-4-5'
+MODEL = os.environ.get("ANTHROPIC_GET_QUESTIONS_MODEL")
 
 SYSTEM_PROMPT = """
 You are a quiz builder that generates questions for a specific topic that will be provided by the user.

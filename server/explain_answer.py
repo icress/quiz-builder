@@ -1,9 +1,8 @@
 import os
 
-from openai import AsyncOpenAI
+from anthropic import AsyncAnthropic
 
-DEFAULT_MODEL = "gemma4:e4b"
-MODEL = os.environ.get("OLLAMA_EXPLAIN_MODEL", DEFAULT_MODEL)
+MODEL = os.environ.get("ANTHROPIC_EXPLAIN_MODEL")
 
 SYSTEM_PROMPT = """You are a helpful tutor. Given a multiple-choice question, the learner's selected answer, and the correct answer, write a short, clear explanation (2–5 sentences).
 If the selected answer matches the correct answer, explain why it is right.
@@ -11,7 +10,7 @@ If it does not match, explain why the selected answer is wrong and why the corre
 Base your reasoning only on the question and the answer texts provided. Do not invent facts beyond typical subject knowledge implied by the question."""
 
 
-llm = AsyncOpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
+llm = AsyncAnthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 
 async def generate_explanation(
     *,
@@ -26,12 +25,11 @@ async def generate_explanation(
         f"Correct answer:\n{correct_text}\n\n"
         f"The learner's answer is {'correct' if selected_is_correct else 'incorrect'}."
     )
-    response = await llm.chat.completions.create(
+    async with llm.messages.stream(
+        max_tokens=1000,
         model=MODEL,
-        messages=[{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": user}],
-        stream=True,
-    )
-    async for chunk in response:
-        if chunk.choices[0].delta.content:
-            print(chunk.choices[0].delta.content, end="", flush=True)
-            yield chunk.choices[0].delta.content
+        system=SYSTEM_PROMPT,
+        messages=[{"role": "user", "content": user}],
+    ) as stream:
+        async for text in stream.text_stream:
+            yield text
