@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import uuid
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -44,3 +45,32 @@ async def test_answer_returns_five_questions_from_json():
     assert isinstance(result, dict)
     assert "questions" in result
     assert len(result["questions"]) == 5
+
+
+@pytest.mark.asyncio
+async def test_answer_adds_uuid_ids_to_questions_and_options():
+    """Each question and option has a server-assigned UUID string; all IDs are unique."""
+    text_block = MagicMock()
+    text_block.type = "text"
+    text_block.text = _llm_json_with_five_questions()
+    mock_response = MagicMock()
+    mock_response.parsed_output = None
+    mock_response.content = [text_block]
+
+    with patch.object(get_questions.llm.messages, "create", return_value=mock_response):
+        result = await get_questions.answer("test topic")
+
+    seen: set[str] = set()
+    for q in result["questions"]:
+        assert "id" in q
+        qid = q["id"]
+        uuid.UUID(qid)
+        assert qid not in seen
+        seen.add(qid)
+        assert len(q["options"]) == 4
+        for opt in q["options"]:
+            assert "id" in opt
+            oid = opt["id"]
+            uuid.UUID(oid)
+            assert oid not in seen
+            seen.add(oid)
