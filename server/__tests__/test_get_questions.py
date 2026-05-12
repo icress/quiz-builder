@@ -31,18 +31,14 @@ def _llm_json_with_five_questions() -> str:
 @pytest.mark.asyncio
 async def test_answer_returns_five_questions_from_json():
     """LLM JSON with five questions is parsed and returned as five question objects."""
-    mock_message = MagicMock()
-    mock_message.content = _llm_json_with_five_questions()
-    mock_choice = MagicMock()
-    mock_choice.message = mock_message
+    text_block = MagicMock()
+    text_block.type = "text"
+    text_block.text = _llm_json_with_five_questions()
     mock_response = MagicMock()
-    mock_response.choices = [mock_choice]
+    mock_response.parsed_output = None
+    mock_response.content = [text_block]
 
-    with patch.object(
-        get_questions.llm.chat.completions,
-        "create",
-        return_value=mock_response,
-    ):
+    with patch.object(get_questions.llm.messages, "create", return_value=mock_response):
         result = await get_questions.answer("test topic")
 
     assert isinstance(result, dict)

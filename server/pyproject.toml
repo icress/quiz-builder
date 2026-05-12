@@ -5,8 +5,10 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "anthropic>=0.101.0",
     "fastapi[standard]>=0.136.1",
     "openai>=2.36.0",
+    "python-dotenv>=1.2.2",
     "sqlalchemy>=2.0.36",
 ]
 
