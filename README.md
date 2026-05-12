@@ -1,6 +1,20 @@
 # Quiz Builder
 
-Monorepo for a quiz-building app: a **React + TypeScript** SPA talks to a **FastAPI** API that persists quizzes in **SQLite** via **SQLAlchemy**.
+Monorepo for a quiz-building app: a **React + TypeScript** frontend talks to a **FastAPI** API that persists quizzes in **SQLite** via **SQLAlchemy**.
+
+## Summary
+
+A quick overview of the decisions I made and why I made them.
+
+### Frontend
+
+I decided to utilize Vite to quickly create a frontend template. I use React in the frontend to deal with updating state and because it is what I am familiar with. TypeScript was my frontend language of choice because I like how typing helps me and my AI agent avoid typing pitfalls.
+
+### Backend
+
+The backend is built with Python because of how many Python tools there are for LLM integrations. The server is built with FastAPI because of its simplicity and ease of use with streaming responses. Because this is a simple MVP, I decided to just use SQLite to store my data, but for production I would lean towards using PostgreSQL. Instead of writing raw SQL, I opted to use SQLAlchemy to do make data changes using Python. 
+
+For my AI integrations, I use Claude Haiku 4.5 for the question generation and Claude Sonnet 4.6 for the explanation feature. I use Haiku for question generation because of the wealth of knowledge, extremely low hallucination rate, and speed. I decided on Claude Sonnet 4.6 to explain the answers because it can provide a much more in-depth, robust answer than Haiku, but still allows me to use the same SDK and access a premier frontier model.
 
 ## Tech stack
 
