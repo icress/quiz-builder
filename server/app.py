@@ -7,12 +7,14 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from get_questions import answer
 from pydantic import BaseModel
-from sqlalchemy import desc, select, text
+from sqlalchemy import desc, inspect as sa_inspect, select, text
 from sqlalchemy.orm import Session
 
 from database import engine, get_db
+from explain_answer import generate_explanation
 from models import Base, Option, Question, Quiz
 from schemas import (
+    ExplainQuestionResponse,
     QuizDetailResponse,
     QuizListItem,
     QuizOptionOut,
@@ -23,9 +25,20 @@ from schemas import (
 )
 
 
+def _ensure_questions_explanation_column() -> None:
+    inspector = sa_inspect(engine)
+    if not inspector.has_table("questions"):
+        return
+    columns = {c["name"] for c in inspector.get_columns("questions")}
+    if "explanation" not in columns:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE questions ADD COLUMN explanation TEXT"))
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
+    _ensure_questions_explanation_column()
     yield
 
 
@@ -77,7 +90,12 @@ def get_quiz(quiz_id: str, db: Session = Depends(get_db)):
             for o in options
         ]
         question_outs.append(
-            QuizQuestionOut(id=q.id, text=q.content, options=option_outs)
+            QuizQuestionOut(
+                id=q.id,
+                text=q.content,
+                options=option_outs,
+                explanation=q.explanation,
+            )
         )
         for o in options:
             if o.is_selected:
@@ -117,3 +135,49 @@ def create_quiz(request: SaveQuizRequest, db: Session = Depends(get_db)):
             )
     db.commit()
     return SaveQuizResponse(quiz_id=quiz_id)
+
+
+@app.post("/questions/{question_id}/explain", response_model=ExplainQuestionResponse)
+def explain_question(question_id: str, db: Session = Depends(get_db)):
+    question = db.get(Question, question_id)
+    if question is None:
+        raise HTTPException(status_code=404, detail="Question not found")
+
+    if question.explanation and question.explanation.strip():
+        return ExplainQuestionResponse(explanation=question.explanation.strip())
+
+    options = db.scalars(
+        select(Option).where(Option.question_id == question_id).order_by(text("rowid"))
+    ).all()
+
+    selected_opts = [o for o in options if o.is_selected]
+    if not selected_opts:
+        raise HTTPException(
+            status_code=400,
+            detail="No selected answer stored for this question",
+        )
+    selected = selected_opts[0]
+
+    correct_opts = [o for o in options if o.is_correct]
+    if not correct_opts:
+        raise HTTPException(
+            status_code=400,
+            detail="No correct answer marked for this question",
+        )
+    correct = correct_opts[0]
+
+    explanation_body = generate_explanation(
+        question_text=question.content,
+        selected_text=selected.content,
+        correct_text=correct.content,
+        selected_is_correct=selected.is_correct,
+    )
+    if not explanation_body:
+        raise HTTPException(
+            status_code=502,
+            detail="Model returned an empty explanation",
+        )
+
+    question.explanation = explanation_body
+    db.commit()
+    return ExplainQuestionResponse(explanation=explanation_body)

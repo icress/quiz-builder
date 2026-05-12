@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import type { Answer } from './App'
+import { API_BASE } from './api'
 
 export interface QuestionType {
   id: string
   text: string
   options: OptionType[]
+  explanation?: string | null
 }
 
 export interface OptionType {
@@ -13,9 +15,26 @@ export interface OptionType {
   is_correct: boolean
 }
 
-export function Question(props: {submitted: boolean, showMissing: boolean, question: QuestionType, setSelectedAnswers: Function, selectedAnswers: Answer[] }) {
-  const { question, setSelectedAnswers, selectedAnswers, submitted, showMissing } = props
+export function Question(props: {
+  submitted: boolean
+  showMissing: boolean
+  question: QuestionType
+  setSelectedAnswers: Function
+  selectedAnswers: Answer[]
+  quizPersisted: boolean
+  onExplanation: (questionId: string, explanation: string) => void
+}) {
+  const {
+    question,
+    setSelectedAnswers,
+    selectedAnswers,
+    submitted,
+    showMissing,
+    quizPersisted,
+    onExplanation,
+  } = props
   const [selected, setSelected] = useState<string | null>(null)
+  const [explainLoading, setExplainLoading] = useState(false)
 
   const selectAnswer = (answer: OptionType) => {
     const selectedAnswer: Answer = {
@@ -30,7 +49,23 @@ export function Question(props: {submitted: boolean, showMissing: boolean, quest
     } else {
       setSelectedAnswers([...selectedAnswers, selectedAnswer])
     }
-    console.log(selectedAnswers)
+  }
+
+  const requestExplanation = async () => {
+    setExplainLoading(true)
+    try {
+      const response = await fetch(`${API_BASE}/questions/${question.id}/explain`, {
+        method: 'POST',
+        headers: { Accept: 'application/json' },
+      })
+      if (!response.ok) {
+        return
+      }
+      const data: { explanation: string } = await response.json()
+      onExplanation(question.id, data.explanation)
+    } finally {
+      setExplainLoading(false)
+    }
   }
 
   const answerForQuestion = selectedAnswers.find((a) => a.questionId === question.id)
@@ -57,13 +92,16 @@ export function Question(props: {submitted: boolean, showMissing: boolean, quest
     return undefined
   }
 
+  const showExplain =
+    submitted && quizPersisted && !question.explanation?.trim()
+
   return (
+    <div style={{ marginBottom: '1.25rem', maxWidth: 560 }}>
     <fieldset
       style={{
         border: `1px solid ${isMissing ? '#dc2626' : 'var(--border, #ccc)'}`,
         borderRadius: 8,
         padding: '1rem 1.25rem',
-        marginBottom: '1.25rem',
         maxWidth: 560,
       }}
     >
@@ -116,5 +154,39 @@ export function Question(props: {submitted: boolean, showMissing: boolean, quest
         ))}
       </div>
     </fieldset>
+    {question.explanation?.trim() ? (
+      <p
+        style={{
+          marginTop: '0.75rem',
+          padding: '0.65rem 0.85rem',
+          fontSize: '0.95rem',
+          lineHeight: 1.5,
+          background: 'var(--explanation-bg, #f8fafc)',
+          borderRadius: 8,
+          border: '1px solid var(--border, #e2e8f0)',
+        }}
+      >
+        {question.explanation}
+      </p>
+    ) : null}
+    {showExplain ? (
+      <button
+        type="button"
+        disabled={explainLoading}
+        onClick={() => void requestExplanation()}
+        style={{
+          marginTop: '0.65rem',
+          padding: '0.4rem 0.85rem',
+          fontSize: '0.9rem',
+          borderRadius: 6,
+          border: '1px solid var(--border, #ccc)',
+          background: explainLoading ? '#e2e8f0' : '#fff',
+          cursor: explainLoading ? 'not-allowed' : 'pointer',
+        }}
+      >
+        {explainLoading ? '…' : 'Explain'}
+      </button>
+    ) : null}
+    </div>
   )
 }

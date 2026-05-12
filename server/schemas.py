@@ -54,6 +54,11 @@ class QuizQuestionOut(BaseModel):
     id: str
     text: str
     options: list[QuizOptionOut]
+    explanation: str | None = None
+
+
+class ExplainQuestionResponse(BaseModel):
+    explanation: str
 
 
 class SelectedAnswerOut(BaseModel):

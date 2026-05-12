@@ -1,8 +1,14 @@
 import { useState } from 'react'
-import { API_BASE } from './App'
+import { API_BASE } from './api'
 
-export function NewTest(props: { setQuestions: Function, setSubmitted: Function, setShowMissing: Function, setActiveSavedQuizId: Function }) {
-  const { setQuestions, setSubmitted, setShowMissing, setActiveSavedQuizId } = props
+export function NewTest(props: {
+  setQuestions: Function
+  setSubmitted: Function
+  setShowMissing: Function
+  setActiveSavedQuizId: Function
+  setQuizPersisted: Function
+}) {
+  const { setQuestions, setSubmitted, setShowMissing, setActiveSavedQuizId, setQuizPersisted } = props
   const [topic, setTopic] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -12,6 +18,7 @@ export function NewTest(props: { setQuestions: Function, setSubmitted: Function,
     setSubmitted(false)
     setShowMissing(false)
     setActiveSavedQuizId(null)
+    setQuizPersisted(false)
     try {
       const response = await fetch(`${API_BASE}/get-questions`, {
         method: 'POST',

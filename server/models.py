@@ -28,6 +28,7 @@ class Question(Base):
         ForeignKey("quizzes.id", ondelete="CASCADE"),
         nullable=False,
     )
+    explanation: Mapped[str | None] = mapped_column(Text, nullable=True)
     quiz: Mapped[Quiz] = relationship(back_populates="questions")
     options: Mapped[list[Option]] = relationship(
         back_populates="question", cascade="all, delete-orphan"

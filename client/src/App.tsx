@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import './App.css'
+import { API_BASE } from './api'
 import type { QuestionType } from './Question'
 import { Sidebar, type QuizSummary } from './Sidebar'
 import { NewTest } from './NewTest'
 import { Test } from './Test'
 
-export const API_BASE = 'http://localhost:8000'
+export { API_BASE } from './api'
 
 export interface Answer {
   questionId: string
@@ -26,6 +27,7 @@ function App() {
   const [selectedAnswers, setSelectedAnswers] = useState<Answer[]>([])
   const [submitted, setSubmitted] = useState<boolean>(false)
   const [showMissing, setShowMissing] = useState<boolean>(false)
+  const [quizPersisted, setQuizPersisted] = useState(false)
   const [savedQuizzes, setSavedQuizzes] = useState<QuizSummary[]>([])
   const [savedListLoading, setSavedListLoading] = useState(true)
   const [activeSavedQuizId, setActiveSavedQuizId] = useState<string | null>(null)
@@ -52,6 +54,12 @@ function App() {
     void refreshSavedQuizzes()
   }, [refreshSavedQuizzes])
 
+  const onExplanation = useCallback((questionId: string, explanation: string) => {
+    setQuestions((prev) =>
+      prev.map((q) => (q.id === questionId ? { ...q, explanation } : q)),
+    )
+  }, [])
+
   const loadSavedQuiz = async (quizId: string) => {
     setSavedQuizLoading(true)
     setActiveSavedQuizId(quizId)
@@ -68,6 +76,7 @@ function App() {
       setQuestions(data.questions)
       setSelectedAnswers(data.selectedAnswers)
       setSubmitted(true)
+      setQuizPersisted(true)
     } finally {
       setSavedQuizLoading(false)
     }
@@ -109,7 +118,12 @@ function App() {
       },
       body: JSON.stringify(payload),
     })
-      .then((res) => (res.ok ? refreshSavedQuizzes() : undefined))
+      .then((res) => {
+        if (res.ok) {
+          setQuizPersisted(true)
+          void refreshSavedQuizzes()
+        }
+      })
       .catch(console.error)
   }
 
@@ -120,6 +134,7 @@ function App() {
     setTopic('')
     setShowMissing(false)
     setActiveSavedQuizId(null)
+    setQuizPersisted(false)
   }
 
   return (
@@ -148,7 +163,8 @@ function App() {
               setQuestions={setQuestions} 
               setSubmitted={setSubmitted} 
               setShowMissing={setShowMissing} 
-              setActiveSavedQuizId={setActiveSavedQuizId} 
+              setActiveSavedQuizId={setActiveSavedQuizId}
+              setQuizPersisted={setQuizPersisted}
             />
           </div>
         ) : (
@@ -158,6 +174,8 @@ function App() {
             showMissing={showMissing}
             selectedAnswers={selectedAnswers}
             setSelectedAnswers={setSelectedAnswers}
+            quizPersisted={quizPersisted}
+            onExplanation={onExplanation}
             onSubmit={Submit}
             onReset={Reset}
           />

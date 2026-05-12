@@ -8,6 +8,8 @@ export interface TestProps {
   showMissing: boolean
   selectedAnswers: Answer[]
   setSelectedAnswers: Dispatch<SetStateAction<Answer[]>>
+  quizPersisted: boolean
+  onExplanation: (questionId: string, explanation: string) => void
   onSubmit: () => void
   onReset: () => void
 }
@@ -18,6 +20,8 @@ export function Test({
   showMissing,
   selectedAnswers,
   setSelectedAnswers,
+  quizPersisted,
+  onExplanation,
   onSubmit,
   onReset,
 }: TestProps) {
@@ -40,6 +44,8 @@ export function Test({
               key={question.id}
               question={question}
               selectedAnswers={selectedAnswers}
+              quizPersisted={quizPersisted}
+              onExplanation={onExplanation}
             />
           ))}
           {questions.length === 5 && !submitted ? (
