@@ -1,4 +1,5 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Explanation } from '../src/Explanation'
 import { API_BASE } from '../src/api'
@@ -92,6 +93,7 @@ describe('Explanation', () => {
   })
 
   it('sends POST to explain URL with Accept text/plain when Explain is clicked', async () => {
+    const user = userEvent.setup()
     const onExplanation = vi.fn()
     vi.mocked(fetch).mockResolvedValueOnce(streamingResponse(['ok']))
 
@@ -105,7 +107,7 @@ describe('Explanation', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Explain' }))
+    await user.click(screen.getByRole('button', { name: 'Explain' }))
 
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledTimes(1)
@@ -118,8 +120,13 @@ describe('Explanation', () => {
   })
 
   it('streams chunks to onExplanation and restores Explain label when done', async () => {
+    const user = userEvent.setup()
     const onExplanation = vi.fn()
-    vi.mocked(fetch).mockResolvedValueOnce(streamingResponse(['part-a', 'part-b']))
+    let resolveFetch: (response: Response) => void = () => {}
+    const pendingFetch = new Promise<Response>((resolve) => {
+      resolveFetch = resolve
+    })
+    vi.mocked(fetch).mockReturnValueOnce(pendingFetch)
 
     render(
       <Explanation
@@ -131,8 +138,10 @@ describe('Explanation', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Explain' }))
+    await user.click(screen.getByRole('button', { name: 'Explain' }))
     expect(screen.getByRole('button', { name: 'Thinking…' })).toBeDisabled()
+
+    resolveFetch(streamingResponse(['part-a', 'part-b']))
 
     await waitFor(() => {
       expect(onExplanation).toHaveBeenCalled()
